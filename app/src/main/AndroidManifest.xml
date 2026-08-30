@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 前台服务（Shell 守护） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- 频谱特效：Visualizer API 需要 RECORD_AUDIO（保留备用） -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 歌词在线获取 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 媒体通知（Android 13+ 需要运行时请求） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="K100PM Tuner"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.K100PM.Tuner"
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true">
+
+        <activity
+            android:name=".app.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <service
+            android:name=".music.AudioChainService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+<property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="持续维持音频处理链连接，使系统级均衡器效果正常工作" />
+        </service>
+
+        <!-- V4A 会话引擎（v2.1 照搬官方2.0.3，由模块/APP am startservice 拉起，隐形普通服务） -->
+        <service
+            android:name=".v4a2.service.ViperService"
+            android:exported="true"
+            android:enabled="true" />
+        
+    </application>
+
+</manifest>

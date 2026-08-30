@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ViPER4Android RE</string>
+    <string name="credits_title">致謝與版權</string>
+    <string name="credits_body">本專案整合了以下開源專案：</string>
+    <string name="credits_proj_app">ViPER4Android（App）</string>
+    <string name="credits_proj_app_by">作者 likelikeslike</string>
+    <string name="credits_proj_driver">ViPER4Android-RE（驅動）</string>
+    <string name="credits_proj_driver_by">作者 Iscle 等</string>
+    <string name="credits_proj_fx">ViPERFX RE（驅動原始碼）</string>
+    <string name="credits_proj_fx_by">作者 AndroidAudioMods（Martmists、Iscle）</string>
+    <string name="credits_repo_fx">https://github.com/AndroidAudioMods/ViPERFX_RE</string>
+    <string name="credits_license">許可證：App 與驅動為 GPL v3.0；ViPERFX RE 為開源</string>
+    <string name="credits_original">由 ViPER520 與 Zhuhang（ViPER Audio）原創；本專案在其基礎上重建。</string>
+    <string name="credits_view_source">檢視原始碼</string>
+    <string name="credits_repo_app">https://github.com/likelikeslike/ViPER4Android</string>
+    <string name="credits_repo_driver">https://github.com/iscle/ViPER4Android-RE</string>
+    <string name="notification_channel_name">音訊處理</string>
+    <string name="notification_channel_description">當 ViPER4Android 正在處理音訊時顯示</string>
+    <string name="notification_title">ViPER4Android</string>
+    <string name="notification_text">音訊處理已啟用</string>
+    <string name="notification_bulk_op_channel_name">批次操作</string>
+    <string name="notification_bulk_op_channel_description">批次操作進度</string>
+    <string name="qs_tile_master_label">Master</string>
+
+    <!-- Master -->
+    <string name="master_enable">總開關</string>
+    <string name="menu_driver_status">驅動狀態</string>
+    <string name="menu_presets">預設</string>
+    <string name="menu_settings">設定</string>
+    <string name="menu_devices">裝置</string>
+
+    <!-- Common -->
+    <string name="label_max_gain">最大增益</string>
+    <string name="label_threshold">閾值</string>
+    <string name="label_gain">增益</string>
+    <string name="label_attack">啟動時間</string>
+    <string name="label_release">釋放</string>
+    <string name="label_strength">強度</string>
+    <string name="label_frequency">頻率</string>
+    <string name="label_width">寬度</string>
+    <string name="label_depth">深度</string>
+    <string name="label_delay">延時</string>
+    <string name="label_mode">模式</string>
+    <string name="label_off">關</string>
+    <string name="label_preset">預設</string>
+    <string name="label_custom">自定義</string>
+    <string name="label_none">無</string>
+    <string name="label_mild">弱</string>
+    <string name="label_medium">中</string>
+    <string name="label_strong">強</string>
+
+    <!-- Numeric input dialog -->
+    <string name="dialog_value_range">範圍: %1$s \u2013 %2$s</string>
+    <string name="dialog_value_range_unit">範圍: %1$s \u2013 %2$s %3$s</string>
+
+    <!-- Output / Master limiter -->
+    <string name="label_output_volume">輸出增益</string>
+    <string name="label_output_pan">音量平衡</string>
+    <string name="label_output_limiter">閾值限制</string>
+    <string name="section_master_controller">主控制器</string>
+
+    <!-- AGC -->
+    <string name="section_agc">回放增益控制</string>
+    <string name="label_agc_output_threshold">輸出閾值</string>
+
+    <!-- LUFS Targeting -->
+    <string name="section_lufs_targeting">響度均衡</string>
+    <string name="label_lufs_target_lufs">目標響度</string>
+    <string name="label_lufs_speed">響應速度</string>
+    <string name="label_lufs_speed_slow">慢</string>
+    <string name="label_lufs_speed_medium">中</string>
+    <string name="label_lufs_speed_fast">快</string>
+
+    <!-- FET Compressor -->
+    <string name="section_fet_compressor">場效應壓縮器</string>
+    <string name="label_fet_ratio">壓縮比</string>
+    <string name="label_fet_knee">拐點</string>
+    <string name="label_fet_auto_knee">自動拐點</string>
+    <string name="label_fet_knee_multi">拐點倍率</string>
+    <string name="label_fet_auto_gain">自動增益</string>
+    <string name="label_fet_auto_attack">自動啟動</string>
+    <string name="label_fet_max_attack">最大啟動</string>
+    <string name="label_fet_auto_release">自動釋放</string>
+    <string name="label_fet_max_release">最大釋放</string>
+    <string name="label_fet_crest">峰值因數</string>
+    <string name="label_fet_adapt">自適應</string>
+    <string name="label_fet_no_clip">無削波</string>
+
+    <!-- Multiband Compressor -->
+    <string name="section_multiband_compressor">多段壓縮器</string>
+    <string name="label_band_enabled">啟用頻段</string>
+    <string name="label_upper_crossover">上分頻點</string>
+
+    <!-- DDC -->
+    <string name="section_ddc">ViPER-DDC</string>
+    <string name="label_ddc_device">耳機校正檔案</string>
+
+    <!-- Spectrum Extension -->
+    <string name="section_spectrum_extension">頻譜擴充套件</string>
+    <string name="label_vse_exciter">激勵器</string>
+
+    <!-- Equalizer -->
+    <string name="section_equalizer">FIR 均衡器</string>
+    <string name="label_eq_bands">頻段數量</string>
+    <string name="label_eq_n_bands">%d 頻段</string>
+
+    <!-- Dynamic EQ -->
+    <string name="section_dynamic_eq">動態均衡器</string>
+    <string name="label_dynamic_eq_q_factor">Q 值</string>
+    <string name="label_dynamic_eq_target_gain">目標增益</string>
+    <string name="label_dynamic_eq_filter_type">濾波型別</string>
+    <string name="dialog_delete_band">刪除頻段</string>
+
+    <!-- Convolver -->
+    <string name="section_convolver">脈衝卷積器</string>
+    <string name="label_convolver_kernel">樣本檔案</string>
+    <string name="label_convolver_cross_channel">通道交叉</string>
+
+    <!-- Field Surround -->
+    <string name="section_field_surround">場環繞</string>
+    <string name="label_field_surround_widening">環繞強度</string>
+    <string name="label_field_surround_mid_image">中央強度</string>
+
+    <!-- Differential Surround -->
+    <string name="section_diff_surround">差分環繞</string>
+    <string name="label_diff_surround_reverse">反相</string>
+    <string name="label_diff_surround_wet_dry_mix">乾溼混合率</string>
+    <string name="label_diff_surround_lp_cutoff">低通截止頻率</string>
+
+    <!-- Stereo Imager -->
+    <string name="section_stereo_imager">立體聲</string>
+    <string name="label_stereo_imager_low_width">低頻寬度</string>
+    <string name="label_stereo_imager_mid_width">中頻寬度</string>
+    <string name="label_stereo_imager_high_width">高頻寬度</string>
+    <string name="label_stereo_imager_low_crossover">低分頻點</string>
+    <string name="label_stereo_imager_high_crossover">高分頻點</string>
+
+    <!-- Headphone Surround -->
+    <string name="section_headphone_surround">耳機環繞聲+</string>
+    <string name="label_vhe_quality">質量等級</string>
+
+    <!-- Reverberation -->
+    <string name="section_reverb">混響</string>
+    <string name="label_reverb_room_size">空間大小</string>
+    <string name="label_reverb_dampening">阻尼</string>
+    <string name="label_reverb_wet">溼訊號</string>
+    <string name="label_reverb_dry">幹訊號</string>
+
+    <!-- Dynamic System -->
+    <string name="section_dynamic_system">動態系統</string>
+    <string name="label_dynamic_system_strength">動態低音強度</string>
+    <string name="label_dynamic_system_x_low_freq">X 低頻</string>
+    <string name="label_dynamic_system_x_high_freq">X 高頻</string>
+    <string name="label_dynamic_system_y_low_freq">Y 低頻</string>
+    <string name="label_dynamic_system_y_high_freq">Y 高頻</string>
+    <string name="label_dynamic_system_side_gain_low">低頻側邊增益</string>
+    <string name="label_dynamic_system_side_gain_high">高頻側邊增益</string>
+
+    <!-- Tube Simulator -->
+    <string name="section_tube_simulator">電子管模擬器 (6N1J)</string>
+
+    <!-- Psychoacoustic Bass -->
+    <string name="section_psycho_bass">虛擬低音</string>
+    <string name="label_psycho_bass_cutoff">截止頻率</string>
+    <string name="label_psycho_bass_intensity">強度</string>
+    <string name="label_psycho_bass_harmonic_order">諧波型別</string>
+    <string name="label_psycho_bass_ori_bass_level">原始低音保留</string>
+
+    <!-- ViPER Bass -->
+    <string name="section_viper_bass">ViPER 低音</string>
+    <string name="label_bass_anti_pop">淡入</string>
+
+    <!-- ViPER Bass Mono -->
+    <string name="section_viper_bass_mono">ViPER 單聲道低音</string>
+
+    <!-- ViPER Clarity -->
+    <string name="section_viper_clarity">ViPER 清晰度</string>
+
+    <!-- Cure -->
+    <string name="section_cure">聽覺系統保護</string>
+    <string name="label_cure_strength">保護強度</string>
+
+    <!-- AnalogX -->
+    <string name="section_analogx">AnalogX</string>
+
+    <!-- Speaker Optimization -->
+    <string name="section_speaker_optimization">揚聲器最佳化</string>
+
+    <!-- Filter Type -->
+    <string name="filter_peak">峰值</string>
+    <string name="filter_low_shelf">低頻升降</string>
+    <string name="filter_high_shelf">高頻升降</string>
+
+    <!-- Harmonic Order -->
+    <string name="harmonic_2nd">第二</string>
+    <string name="harmonic_3rd">第三</string>
+    <string name="harmonic_4th">第四</string>
+    <string name="harmonic_5th">第五</string>
+
+    <!-- Bass modes -->
+    <string name="bass_mode_natural">自然低音</string>
+    <string name="bass_mode_pure">純淨低音+</string>
+    <string name="bass_mode_subwoofer">超重低音</string>
+
+    <!-- Clarity modes -->
+    <string name="clarity_mode_natural">自然</string>
+    <string name="clarity_mode_ozone">OZone+</string>
+    <string name="clarity_mode_xhifi">XHiFi</string>
+
+    <!-- Presets -->
+    <string name="preset_save_title">儲存預設</string>
+    <string name="preset_rename_title">重新命名預設</string>
+    <string name="preset_name_hint">預設名稱</string>
+    <string name="preset_empty">沒有已儲存的預設</string>
+    <string name="preset_save_current">儲存當前預設</string>
+    <string name="preset_clear_all">全部清除</string>
+    <string name="preset_clear_all_title">清除全部預設</string>
+    <string name="preset_clear_all_confirm">確定刪除 %1$d 個預設? 此操作無法撤銷</string>
+    <string name="preset_clear_all_progress">正在清除預設</string>
+    <string name="preset_cleared">已清除</string>
+    <string name="preset_update_title">更新預設</string>
+    <string name="preset_update_confirm">確定用當前設定覆蓋 "%1$s"? 此操作無法撤銷</string>
+    <string name="preset_load_title">Load Preset</string>
+    <string name="preset_load_confirm">Load "%1$s"? Current settings will be replaced.</string>
+    <string name="preset_delete_title">Delete Preset</string>
+    <string name="preset_delete_confirm">Delete "%1$s"? This cannot be undone.</string>
+
+    <!-- Driver Status -->
+    <string name="driver_not_found">未找到驅動</string>
+    <string name="driver_version_code">版本號</string>
+    <string name="driver_version_name">版本名</string>
+    <string name="driver_architecture">架構</string>
+    <string name="driver_streaming">音訊流</string>
+    <string name="driver_sampling_rate">取樣率</string>
+    <string name="status_active">處理中</string>
+    <string name="status_inactive">未處理</string>
+    <string name="status_unknown">未知</string>
+
+    <!-- Settings -->
+    <string name="settings_auto_start">開機模組聯動</string>
+    <string name="settings_aidl_mode">AIDL 模式</string>
+    <string name="settings_global_mode">全域性模式</string>
+    <string name="settings_driver_version">驅動版本</string>
+    <string name="settings_driver_arch">驅動架構</string>
+    <string name="settings_app_version">應用版本</string>
+    <string name="settings_files_section">檔案</string>
+    <string name="settings_import_preset">匯入預設</string>
+    <string name="settings_import_kernel">匯入核心</string>
+    <string name="settings_import_vdc">匯入 VDC</string>
+    <string name="import_success">匯入成功</string>
+    <string name="import_failed">匯入失敗</string>
+
+    <!-- Devices -->
+    <string name="device_dialog_title">裝置</string>
+    <string name="device_type_bluetooth">藍芽</string>
+    <string name="device_type_wired">有線耳機</string>
+    <string name="device_type_speaker">揚聲器</string>
+    <string name="device_mode_headphone">耳機</string>
+    <string name="device_mode_speaker">揚聲器</string>
+    <string name="device_label_type">型別</string>
+    <string name="device_label_address">地址</string>
+    <string name="device_label_last_conn">上次連線</string>
+    <string name="device_no_devices">無已儲存裝置</string>
+    <string name="device_rename_title">重新命名裝置</string>
+    <string name="device_rename_hint">裝置名稱</string>
+    <string name="device_update_title">更新裝置預設</string>
+    <string name="device_update_confirm">確定用當前設定覆蓋 "%1$s"? 此操作無法撤銷</string>
+    <string name="device_load_title">Load Device Preset</string>
+    <string name="device_load_confirm">Load "%1$s" preset? Current settings will be replaced.</string>
+    <string name="device_delete_title">Delete Device Preset</string>
+    <string name="device_delete_confirm">Delete the saved preset for "%1$s"? This cannot be undone.</string>
+
+    <!-- Actions -->
+    <string name="action_save">儲存</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">確定</string>
+    <string name="reset_to_defaults">恢復預設</string>
+    <string name="reset_confirm_title">確認恢復預設？</string>
+    <string name="reset_confirm_message">確定將全部音效恢復為預設設定？當前總開關狀態將保留。</string>
+    <string name="action_close">關閉</string>
+    <string name="action_rename">重新命名</string>
+    <string name="action_reset">重置</string>
+    <string name="action_load">載入</string>
+    <string name="action_update">更新</string>
+    <string name="action_delete">刪除</string>
+    <string name="action_clear">清除</string>
+
+    <!-- Debug -->
+    <string name="debug_log_title">除錯日誌</string>
+    <string name="debug_mode_enabled">除錯模式已啟用</string>
+    <string name="debug_search_hint">篩選日誌\u2026</string>
+    <string name="debug_disable_debug">禁用除錯</string>
+
+    <!-- Debug filters -->
+    <string name="debug_filter_all">全部</string>
+    <string name="debug_filter_info">資訊</string>
+    <string name="debug_filter_debug">除錯</string>
+    <string name="debug_filter_warn">警告</string>
+    <string name="debug_filter_error">錯誤</string>
+    <string name="debug_filter_app">應用</string>
+    <string name="debug_filter_driver">驅動</string>
+    <string name="delete_file_title">刪除檔案</string>
+    <string name="delete_file_message">確認刪除 "%1$s"?</string>
+
+    <!-- EQ presets -->
+    <string name="eq_preset_acoustic">原聲</string>
+    <string name="eq_preset_bass_booster">低音增強</string>
+    <string name="eq_preset_bass_reducer">低音削弱</string>
+    <string name="eq_preset_classical">古典</string>
+    <string name="eq_preset_deep">深沉</string>
+    <string name="eq_preset_flat">均衡</string>
+    <string name="eq_preset_rnb">節奏藍調</string>
+    <string name="eq_preset_rock">搖滾</string>
+    <string name="eq_preset_small_speakers">小型音響</string>
+    <string name="eq_preset_treble_booster">高音增強</string>
+    <string name="eq_preset_treble_reducer">高音削弱</string>
+    <string name="eq_preset_vocal_booster">人聲增強</string>
+
+    <!-- Dynamic System device presets -->
+    <string name="ds_device_extreme_headphone_v2">極致耳機 (v2)</string>
+    <string name="ds_device_high_end_headphone_v2">高階耳機 (v2)</string>
+    <string name="ds_device_common_headphone_v2">普通耳機 (v2)</string>
+    <string name="ds_device_low_end_headphone_v2">入門耳機 (v2)</string>
+    <string name="ds_device_common_earphone_v2">普通耳塞 (v2)</string>
+    <string name="ds_device_extreme_headphone_v1">極致耳機 (v1)</string>
+    <string name="ds_device_high_end_headphone_v1">高階耳機 (v1)</string>
+    <string name="ds_device_common_headphone_v1">普通耳機 (v1)</string>
+    <string name="ds_device_common_earphone_v1">普通耳塞 (v1)</string>
+</resources>
