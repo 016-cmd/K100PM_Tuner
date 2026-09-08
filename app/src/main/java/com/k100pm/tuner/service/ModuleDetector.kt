@@ -37,12 +37,16 @@ object ModuleDetector {
             isInstalled = true
             installedVersion = modProp.lines().firstOrNull { it.startsWith("version=") }?.substringAfter("=")?.trim() ?: "未知版本"
             edition = when {
-                // K100PM 不分公开/私人，只分：A版（无v4a）/ 普通版（含v4a）
-                modProp.contains("Viper4Android", true) ||
-                    modProp.contains("v4a", true) -> "普通版(含v4a)"
-                modProp.contains("v1.2A", true) -> "A版(无v4a)"
-                else -> "未知"
-            }
+    // K100PM 不分公开/私人，只分：A版（无v4a）/ 普通版（含v4a）
+    // 先判断 A 版（描述里明确写了 "A版" 或 "无v4a"）
+    modProp.contains("A版", true) ||
+       modProp.contains("无v4a", true) ||
+       modProp.contains("v1.2A", true) ||
+       modProp.contains("v1.3A", true) -> "A版(无v4a)"
+    modProp.contains("Viper4Android", true) ||
+       modProp.contains("v4a", true) -> "普通版(含v4a)"
+    else -> "未知"
+}
         } else {
             isInstalled = false; installedVersion = "未安装"; edition = "未知"
         }
