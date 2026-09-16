@@ -22,7 +22,19 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        # 原 android-actions/setup-android@v3 在新 runner 上会尝试安装已废弃的 'tools' 包，
+        # 导致 sdkmanager 报错退出（Failed to find package 'tools'）。runner 已预装 platform/build-tools，
+        # 这里只需接受 license 即可，不再额外装任何包。
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          echo "SDK_ROOT=$SDK_ROOT"
+          for CT in "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager; do
+            if [ -x "$CT" ]; then
+              echo "accepting licenses via $CT"
+              yes | "$CT" --licenses >/dev/null 2>&1 || true
+            fi
+          done
+          echo "SDK ready"
 
       - name: Restore signing keystore from secret
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > debug.keystore
