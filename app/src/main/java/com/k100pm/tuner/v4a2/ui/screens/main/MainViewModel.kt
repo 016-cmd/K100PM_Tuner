@@ -407,10 +407,15 @@ class MainViewModel(private val app: Application) : AndroidViewModel(app) {
             dispatchFullState()
         }
 
-        /** 恢复默认：保留 master 状态，其余全部恢复官方出厂默认，落 SP + DB + 写回驱动。 */
+        /** 恢复默认：保留当前设备/master 状态，只重置音效参数，落 SP + DB + 写回驱动。 */
         fun resetToDefaults() {
-            val masterOn = _uiState.value.masterEnable
-            val defaults = EffectState().copy(masterEnable = masterOn)
+            val current = _uiState.value
+            val defaults =
+                EffectState().copy(
+                    masterEnable = current.masterEnable,
+                    activeDeviceId = current.activeDeviceId,
+                    activeDeviceName = current.activeDeviceName,
+                )
             _uiState.update { defaults }
             // 落 SP（独立 persistScope，不随 viewModelScope 取消）
             persistScope.launch { saveEffectPrefs(repository, defaults) }
