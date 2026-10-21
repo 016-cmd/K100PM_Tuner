@@ -24,16 +24,16 @@ import java.io.File
  *   ① cat $DAX_SYS 读当前系统值作为模板（root,单行命令）
  *   ② Kotlin 正则替换修改参数（APP 内存中）
  *   ③ 写入 APP 内部目录文件（context.filesDir,不需要 root,无长度限制）
- *   ④ su -c cp 覆盖到模块 Link 目录（Magisk 开机 bind mount 的源文件）
- *   ⑤ su -c cp 覆盖到模块 vendor 目录（与 Link 保持 MD5 一致）
+ *   ④ su -c cp 覆盖到模块 Aoi 目录（Magisk 开机 bind mount 的源文件）
+ *   ⑤ su -c cp 覆盖到模块 vendor 目录（与 Aoi 保持 MD5 一致）
  *   ⑥ 重启 audioserver 使杜比引擎重新加载（mount --bind 已同步,即时生效）
  *
  * ⚠ 即时生效原理:
- * 模块 post-fs-data.sh 通过 mount --bind 将 Link/ 和 vendor/ 挂载到系统路径,
+ * 模块 post-fs-data.sh 通过 mount --bind 将 Aoi/ 和 vendor/ 挂载到系统路径,
  * 写模块源文件即同步到系统路径,重启 audioserver 使杜比引擎重新读取即可生效.
  * 不需要重启手机.但请不要频繁应用参数,每次应用都会重启音频服务.
  *
- * 注意:K100PM 已统一 vendor 与 Link/odm 目录（学 K90PM: 两目录保持一致 MD5）,APP 同时写 vendor.
+ * 注意:K100PM 已统一 vendor 与 Aoi/odm 目录（学 K90PM: 两目录保持一致 MD5）,APP 同时写 vendor.
  */
 object DolbyTunerManager {
 
@@ -62,11 +62,11 @@ object DolbyTunerManager {
     /** 系统杜比文件路径（只读,仅用于读取模板和解析） */
     private const val DAX_SYS = "/odm/etc/dolby/dax-default.xml"
 
-    /** 模块 Link 目录下的杜比主文件（Magisk 开机 bind mount 到 /odm/etc/dolby/ 的源文件） */
-    private val MODULE_DAX get() = "${moduleBase()}/Link/odm/etc/dolby/dax-default.xml"
+    /** 模块 Aoi 目录下的杜比主文件（Magisk 开机 bind mount 到 /odm/etc/dolby/ 的源文件） */
+    private val MODULE_DAX get() = "${moduleBase()}/Aoi/odm/etc/dolby/dax-default.xml"
 
-    // K100PM 已统一 vendor 与 Link/odm 目录（学 K90PM: 两目录保持一致,MD5 一致）,APP 同时写 vendor
-    /** 模块 vendor 目录下的杜比文件（已与 Link/odm 保持一致,APP 同步写入） */
+    // K100PM 已统一 vendor 与 Aoi/odm 目录（学 K90PM: 两目录保持一致,MD5 一致）,APP 同时写 vendor
+    /** 模块 vendor 目录下的杜比文件（已与 Aoi/odm 保持一致,APP 同步写入） */
     private val MODULE_VENDOR_DAX get() = "${moduleBase()}/vendor/etc/dolby/dax-default.xml"
 
     /** 模块 factory 目录下的原始杜比文件（不参与挂载,仅用于 APP 重置恢复） */
@@ -441,8 +441,8 @@ object DolbyTunerManager {
      *   ① cat $DAX_SYS 读当前系统值作为模板（root,单行命令）
      *   ② Kotlin 正则替换修改参数（APP 内存中）
      *   ③ 写入 APP 内部目录文件（context.filesDir,不需要 root,无长度限制）
-     *   ④ su -c cp 覆盖到模块 Link 目录（Magisk 开机 bind mount 的源文件）
-     *   ⑤ su -c cp 覆盖到模块 vendor 目录（与 Link 保持 MD5 一致）
+     *   ④ su -c cp 覆盖到模块 Aoi 目录（Magisk 开机 bind mount 的源文件）
+     *   ⑤ su -c cp 覆盖到模块 vendor 目录（与 Aoi 保持 MD5 一致）
      *   ⑥ 重启 audioserver 使杜比引擎重新加载（mount --bind 已同步,即时生效）
      *   ⑦ 提示"参数已保存并生效!"
      *
@@ -524,17 +524,17 @@ object DolbyTunerManager {
             internalFile.writeText(modified, Charsets.UTF_8)
             val internalPath = internalFile.absolutePath
 
-            // 4. su -c cp 覆盖到模块 Link 目录（Magisk 开机 bind mount 的源文件）
+            // 4. su -c cp 覆盖到模块 Aoi 目录（Magisk 开机 bind mount 的源文件）
             val linkOk = WsaShell.execSyncCmd(
                 "cp -f '$internalPath' '$MODULE_DAX' && chmod 644 '$MODULE_DAX' && echo OK || echo FAIL"
             )
             if (!linkOk.contains("OK")) {
-                _resultMsg.value = "❌ 模块 Link 目录写入失败,模块可能不存在或只读"
+                _resultMsg.value = "❌ 模块 Aoi 目录写入失败,模块可能不存在或只读"
                 _isApplying.value = false
                 return@withContext false
             }
 
-            // K100PM 已统一 vendor 与 Link/odm 目录,APP 同步写 vendor（学 K90PM: 两目录保持一致 MD5）
+            // K100PM 已统一 vendor 与 Aoi/odm 目录,APP 同步写 vendor（学 K90PM: 两目录保持一致 MD5）
             val vendorExists = WsaShell.execSyncCmd("[ -f $MODULE_VENDOR_DAX ] && echo yes || echo no")
             if (vendorExists.contains("yes")) {
                 WsaShell.execSyncCmd("cp -f '$internalPath' '$MODULE_VENDOR_DAX' && chmod 644 '$MODULE_VENDOR_DAX'")
@@ -565,7 +565,7 @@ object DolbyTunerManager {
      * 重置为模块默认参数,重启音频服务即时生效.
      *
      * 从模块 factory 目录读取原始杜比文件（不参与挂载,始终保留模块出厂原始值）,
-     * 覆盖 Link/vendor 目录后重启 audioserver.
+     * 覆盖 Aoi/vendor 目录后重启 audioserver.
      */
     suspend fun resetToModuleDefault(context: Context): Boolean = withContext(Dispatchers.IO) {
         _isApplying.value = true
@@ -601,17 +601,17 @@ object DolbyTunerManager {
             internalFile.writeText(factoryXml, Charsets.UTF_8)
             val internalPath = internalFile.absolutePath
 
-            // 3. su -c cp 覆盖回模块 Link 目录
+            // 3. su -c cp 覆盖回模块 Aoi 目录
             val linkOk = WsaShell.execSyncCmd(
                 "cp -f '$internalPath' '$MODULE_DAX' && chmod 644 '$MODULE_DAX' && echo OK || echo FAIL"
             )
             if (!linkOk.contains("OK")) {
-                _resultMsg.value = "❌ 模块 Link 目录写入失败"
+                _resultMsg.value = "❌ 模块 Aoi 目录写入失败"
                 _isApplying.value = false
                 return@withContext false
             }
 
-            // K100PM 已统一 vendor 与 Link/odm 目录,重置时同步写 vendor（学 K90PM）
+            // K100PM 已统一 vendor 与 Aoi/odm 目录,重置时同步写 vendor（学 K90PM）
             val vendorExists = WsaShell.execSyncCmd("[ -f $MODULE_VENDOR_DAX ] && echo yes || echo no")
             if (vendorExists.contains("yes")) {
                 WsaShell.execSyncCmd("cp -f '$internalPath' '$MODULE_VENDOR_DAX' && chmod 644 '$MODULE_VENDOR_DAX'")
@@ -669,7 +669,7 @@ object DolbyTunerManager {
      */
     private fun checkModuleVersionChanged(context: Context) {
         try {
-            // 读取当前模块版本信息（version 行 + Link 文件最后修改时间）
+            // 读取当前模块版本信息（version 行 + Aoi 文件最后修改时间）
             val modProp = WsaShell.execSyncCmd("cat ${moduleBase()}/module.prop 2>/dev/null")
             val daxModTime = WsaShell.execSyncCmd("stat -c %Y $MODULE_DAX 2>/dev/null")
             val currentVersion = (modProp + "|" + daxModTime).trim()
@@ -982,7 +982,7 @@ private fun replaceInAllProfiles(xml: String, paramName: String, newValue: Strin
     /**
      * 保留的 sed 替换方法（已废弃,不再被调用）.
      * 原用于直接 sed 修改工作文件,因 toybox sed 引号兼容性问题被 Kotlin 替换取代.
-     * 当前使用 Kotlin 替换 + 内部文件 + su cp 写入模块 Link 目录.
+     * 当前使用 Kotlin 替换 + 内部文件 + su cp 写入模块 Aoi 目录.
      */
     private fun execSedSpeaker(param: String, value: String) {
         val safeValue = value.replace("/", "\\/").replace("&", "\\&")
