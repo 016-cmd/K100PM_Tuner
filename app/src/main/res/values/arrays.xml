@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Xposed 作用域：空数组表示全局模块 -->
+    <string-array name="xposed_scope" />
+</resources>
