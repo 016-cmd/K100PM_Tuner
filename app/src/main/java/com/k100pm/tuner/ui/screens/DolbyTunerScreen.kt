@@ -126,6 +126,33 @@ fun DolbyTunerScreen(activity: Activity) {
         ) {
                 AlertTipCard(statusMsg, isLoading, isApplying)
 
+
+                // ═══════════════════════════════════════
+                //  第一区：实时层（写运行中的 Dolby DAP）
+                // ═══════════════════════════════════════
+                LayerBanner(
+                    title = "Dolby · Realtime Layer",
+                    subtitle = "实时层 · GEQ 20 段 · 即时生效",
+                    desc = "直接改运行中的杜比引擎：拖动就变声，不重启音频服务。适合快速试音。",
+                    icon = Icons.Default.GraphicEq
+                )
+                Spacer(Modifier.height(6.dp))
+                DapRealtimeSection()
+
+                Spacer(Modifier.height(10.dp))
+                LayerGuide("以下是文件层 · 改配置文件 · 需要重启音频服务")
+
+                // ═══════════════════════════════════════
+                //  第二区：文件层（模块 dax 配置，应用后重启音频服务）
+                // ═══════════════════════════════════════
+                LayerBanner(
+                    title = "Dolby · File Layer",
+                    subtitle = "文件层 · 模块 dax 配置 · 应用后重启音频服务",
+                    desc = "改的是模块里的 dax 文件：点「应用」会重启音频服务才生效，重启手机也保留。定稿用这个。",
+                    icon = Icons.Default.Description
+                )
+                Spacer(Modifier.height(6.dp))
+
                 if (isLoading) {
                     Box(Modifier.fillMaxWidth().padding(vertical = 40.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = Accent, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
@@ -519,12 +546,6 @@ fun DolbyTunerScreen(activity: Activity) {
                         }
                     }
 
-                    // ── 分层引导：以上是文件层，以下是实时层 ──
-                    LayerGuide("以上为文件层（改配置文件 · 应用后重启音频服务）")
-                    Spacer(Modifier.height(10.dp))
-                    SectionTitle("实时层 · GEQ 20 段（即时生效）")
-                    DapRealtimeSection()
-                    Spacer(Modifier.height(16.dp))
                     // ── 温馨提示卡 ──
                     Card(
 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -1138,6 +1159,66 @@ private fun ParamDropdown(
         }
     }
 }
+/**
+ * 分区横幅：把「实时层」和「文件层」两块明确分开
+ * 风格与页面一致：绿色强调 + 卡片圆角
+ */
+@Composable
+private fun LayerBanner(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    desc: String? = null
+) {
+    val colors = MaterialTheme.colorScheme
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = AccentDim.copy(alpha = 0.18f))
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, null, tint = Accent, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+                Text(
+                    subtitle,
+                    color = colors.onSurfaceVariant,
+                    fontSize = 10.sp
+                )
+                if (!desc.isNullOrBlank()) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        desc,
+                        color = colors.onSurfaceVariant.copy(alpha = 0.75f),
+                        fontSize = 9.sp,
+                        lineHeight = 13.sp
+                    )
+                }
+            }
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Accent.copy(alpha = 0.18f))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    if (title.contains("Realtime", ignoreCase = true)) "LIVE" else "FILE",
+                    color = Accent, fontSize = 9.sp, fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
 /**
  * 两层之间的引导条：说清「这一层是干什么的、要不要重启」
  */
