@@ -1203,6 +1203,37 @@ private fun replaceInAllProfiles(xml: String, paramName: String, newValue: Strin
         return "✅ 预设「$name」已保存"
     }
 
+    /**
+     * 加载预设时顺便把实时层 GEQ 写回 DSP。
+     * 返回 null = 成功或该预设没有 GEQ 数据；否则是错误描述。
+     */
+    suspend fun applyPresetRealtime(context: android.content.Context, name: String): String? =
+        withContext(Dispatchers.IO) {
+            val raw = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                .getString(KEY_LIST, "[]") ?: "[]"
+            val arr = try { JSONArray(raw) } catch (_: Exception) { JSONArray() }
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                if (obj.getString("name") != name) continue
+                val geqArr = obj.optJSONArray("geq") ?: return@withContext null
+                if (geqArr.length() != DapRealtime.BANDS) return@withContext null
+                val geq = IntArray(DapRealtime.BANDS) { geqArr.getInt(it) }
+                // 写进 DSP（优先复用页面里的常驻会话：新开一个句柄会触发 Dolby 重新下发旧值）
+                var err = DapRealtime.writeLive(geq)
+                if (err != null) {
+                    // 会话不可用时退回一次性写入
+                    err = DapRealtime.writeCurve(geq, null)
+                }
+                if (err != null) return@withContext err
+                runCatching { DapRealtime.save() }          // 让 Dolby 自己落库
+                DapCurveStore.save(context, geq, bootApply = true)
+                DapCurveStore.clearDraft(context)
+                DapRealtime.notifyChanged()      // 让实时层 UI 立刻刷新
+                return@withContext null
+            }
+            null
+        }
+
     /** 按名称加载预设 */
     fun loadPreset(context: android.content.Context, name: String): Boolean {
         val raw = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
