@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.k100pm.tuner.R
 import com.k100pm.tuner.v4a2.data.model.Preset
+import com.k100pm.tuner.ui.theme.jellyPress
 
 @Composable
 fun PresetDialog(
@@ -337,7 +338,7 @@ private fun PresetItem(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onLoad)
+                .jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable(onClick = onLoad)
                 .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,

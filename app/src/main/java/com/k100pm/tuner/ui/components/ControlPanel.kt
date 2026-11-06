@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.k100pm.tuner.service.*
 import com.k100pm.tuner.ui.MainViewModel
+import com.k100pm.tuner.ui.theme.jellyPress
 
 /**
  * WSA 控件面板
@@ -165,7 +166,7 @@ private fun ControlItem(
                     GlassSurface(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .then(if (enabled) Modifier.clickable { expanded = true } else Modifier)
+                            .then(if (enabled) Modifier.jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable { expanded = true } else Modifier)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

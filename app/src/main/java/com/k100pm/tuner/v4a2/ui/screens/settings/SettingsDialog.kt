@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.k100pm.tuner.R
 import com.k100pm.tuner.v4a2.ui.screens.main.DriverStatus
 import com.k100pm.tuner.v4a2.ui.theme.status_active_green
+import com.k100pm.tuner.ui.theme.jellyPress
 
 @Composable
 fun SettingsDialog(
@@ -104,7 +105,7 @@ fun SettingsDialog(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable {
                                 tapCount.intValue++
                                 if (tapCount.intValue >= 7) {
                                     tapCount.intValue = 0

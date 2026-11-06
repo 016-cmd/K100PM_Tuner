@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.k100pm.tuner.R
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.k100pm.tuner.ui.theme.jellyPress
 
 data class SliderEdit(
     val displayValue: Double,

@@ -51,6 +51,7 @@ import com.k100pm.tuner.v4a2.ui.theme.status_active_green
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.k100pm.tuner.ui.theme.jellyPress
 
 @Composable
 fun DeviceDialog(
@@ -302,7 +303,7 @@ private fun DeviceListView(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .clickable { onSelect(device) }
+                        .jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable { onSelect(device) }
                         .padding(vertical = 8.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -461,7 +462,7 @@ private fun ActionItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
             Modifier
-                .clickable(enabled = enabled) { onClick() }
+                .jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable(enabled = enabled) { onClick() }
                 .padding(8.dp),
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = tint)

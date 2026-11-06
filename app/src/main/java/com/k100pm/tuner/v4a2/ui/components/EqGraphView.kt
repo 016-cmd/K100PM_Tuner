@@ -55,6 +55,7 @@ import com.k100pm.tuner.v4a2.viper.ViperDispatcher
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
+import com.k100pm.tuner.ui.theme.jellyPress
 
 private const val DB_MIN = -12f
 private const val DB_MAX = 12f
@@ -86,7 +87,7 @@ fun EqCurveGraph(
         modifier =
             graphModifier
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onClick() },
+                .jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable { onClick() },
         color = surfaceDark,
         shape = RoundedCornerShape(12.dp),
     ) {
@@ -424,7 +425,7 @@ fun EqEditDialog(
                                     text = "${"%.1f".format(localBands[index])}dB",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.width(56.dp).clickable { showBandEdit = true },
+                                    modifier = Modifier.width(56.dp).jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable { showBandEdit = true },
                                     maxLines = 1,
                                 )
                             }

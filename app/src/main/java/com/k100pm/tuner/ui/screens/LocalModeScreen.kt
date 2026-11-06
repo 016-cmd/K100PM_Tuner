@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import com.k100pm.tuner.ui.theme.jellyPress
 
 /**
  * 本地搜索播放模式 — 完全独立的 Composable
@@ -416,7 +417,7 @@ fun LocalModeScreen(
                         )
                     }
                     // 歌名 + 歌手
-                    Column(Modifier.weight(1f).clickable {
+                    Column(Modifier.weight(1f).jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable {
                         onCurrentSongChange(song); onSearchResultsChange(emptyList()); startPlayback(song)
                     }.padding(horizontal = 4.dp)) {
                         Text(song.title, style = MaterialTheme.typography.bodyLarge,
@@ -622,7 +623,7 @@ fun LocalModeScreen(
                 ) {
                     Column {
                         Row(
-                            modifier = Modifier.fillMaxWidth().clickable { playlistExpanded = !playlistExpanded }
+                            modifier = Modifier.fillMaxWidth().jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable { playlistExpanded = !playlistExpanded }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -689,7 +690,7 @@ fun LocalModeScreen(
                                                 tint = if (index < favoriteSongs.size - 1) colors.onSurfaceVariant else colors.onSurfaceVariant.copy(0.2f))
                                         }
                                         // 歌名 + 歌手
-                                        Column(Modifier.weight(1f).clickable(enabled = !isCurrent) { playFav(fav) }) {
+                                        Column(Modifier.weight(1f).jellyPress(com.k100pm.tuner.ui.theme.Appearance.jelly > 0).clickable(enabled = !isCurrent) { playFav(fav) }) {
                                             Text(fav.title, style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                                                 color = if (isCurrent) colors.primary else colors.onSurface,

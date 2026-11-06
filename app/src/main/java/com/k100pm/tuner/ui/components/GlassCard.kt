@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.k100pm.tuner.ui.theme.Appearance
 import com.k100pm.tuner.ui.theme.cardEnter
 import com.k100pm.tuner.ui.theme.glassSurface
+import com.k100pm.tuner.ui.theme.jellyPress
 
 /**
  * 液态玻璃卡片（Backdrop 真折射）。
