@@ -44,6 +44,10 @@ fun DolbyTunerScreen(activity: Activity) {
     val isLoading by DolbyTunerManager.isLoading.collectAsState()
     val isApplying by DolbyTunerManager.isApplying.collectAsState()
     val statusMsg by DolbyTunerManager.statusMsg.collectAsState()
+    // 调试模式：绕过「状态消息」门控，让全部卡片可见
+    val debugUi = com.k100pm.tuner.ui.theme.DebugMode.on(
+        androidx.compose.ui.platform.LocalContext.current
+    )
     val resultMsg by DolbyTunerManager.resultMsg.collectAsState()
     val hasFactoryDax by DolbyTunerManager.hasFactoryDax.collectAsState()
 
@@ -127,7 +131,7 @@ fun DolbyTunerScreen(activity: Activity) {
                 .padding(horizontal = 16.dp)
         ) {
             item {
-                AlertTipCard(statusMsg, isLoading, isApplying)
+                if (!debugUi) AlertTipCard(statusMsg, isLoading, isApplying)
 
                 // ═══════════════════════════════════════════
                 //  第一区：实时层（写运行中的 Dolby DAP）
@@ -162,7 +166,7 @@ fun DolbyTunerScreen(activity: Activity) {
                 }
 
             }
-            val ok = !isLoading && statusMsg.isBlank() && !isApplying
+            val ok = !isLoading && (statusMsg.isBlank() || debugUi) && !isApplying
             item { if (ok) {
                     SectionTitle("快速开关")
 
