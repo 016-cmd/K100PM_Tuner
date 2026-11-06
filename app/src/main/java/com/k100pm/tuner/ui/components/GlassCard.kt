@@ -1,7 +1,5 @@
 package com.k100pm.tuner.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -10,16 +8,21 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.k100pm.tuner.ui.theme.Appearance
+import com.k100pm.tuner.ui.theme.cardEnter
+import com.k100pm.tuner.ui.theme.glassSurface
 
 /**
- * 半透明玻璃卡片 — 纯色半透明 + 细边框模拟玻璃效果.
- * 不使用 Backdrop 库,避免 MIUI 渲染引擎崩溃.
+ * 液态玻璃卡片（Backdrop 真折射）。
+ *
+ * 采样的是 Theme 里那一层「壁纸层 backdrop」，
+ * 不是每张卡各抓一次背景 —— 不会踩 RenderThread 递归崩溃。
+ *
+ * Backdrop 不可用（API<33 / 省电档）时退回纯色玻璃。
  */
 @Composable
 fun GlassCard(
@@ -27,21 +30,12 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val isDark = colors.background.red * 0.299f + colors.background.green * 0.587f + colors.background.blue * 0.114f < 0.5f
-    val shape = RoundedCornerShape(20.dp)
-
-    val fillColor = if (isDark) Color.Black.copy(alpha = 0.20f)
-    else Color.White.copy(alpha = 0.35f)
-
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.06f)
-    else Color.Black.copy(alpha = 0.06f)
-
+    val radius = Appearance.radius
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(fillColor, shape)
-            .border(0.5.dp, borderColor, shape)
+            .cardEnter(Appearance.animCard == 1)
+            .clip(RoundedCornerShape(radius.dp))
+            .glassSurface(radius)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
     ) {
         Column(
@@ -55,23 +49,14 @@ fun GlassCard(
 @Composable
 fun GlassSurface(
     modifier: Modifier = Modifier,
+    radius: Float = Appearance.radius,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val isDark = colors.background.red * 0.299f + colors.background.green * 0.587f + colors.background.blue * 0.114f < 0.5f
-    val shape = RoundedCornerShape(20.dp)
-
-    val fillColor = if (isDark) Color.Black.copy(alpha = 0.20f)
-    else Color.White.copy(alpha = 0.35f)
-
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.06f)
-    else Color.Black.copy(alpha = 0.06f)
-
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(fillColor, shape)
-            .border(0.5.dp, borderColor, shape)
+            .cardEnter(Appearance.animCard == 1)
+            .clip(RoundedCornerShape(radius.dp))
+            .glassSurface(radius)
     ) {
         content()
     }
@@ -82,22 +67,13 @@ fun GlassSettingsCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val isDark = colors.background.red * 0.299f + colors.background.green * 0.587f + colors.background.blue * 0.114f < 0.5f
-    val shape = RoundedCornerShape(16.dp)
-
-    val fillColor = if (isDark) Color.Black.copy(alpha = 0.25f)
-    else Color.White.copy(alpha = 0.40f)
-
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.08f)
-    else Color.Black.copy(alpha = 0.08f)
-
+    val radius = (Appearance.radius - 8f).coerceAtLeast(10f)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(fillColor, shape)
-            .border(0.5.dp, borderColor, shape)
+            .cardEnter(Appearance.animCard == 1)
+            .clip(RoundedCornerShape(radius.dp))
+            .glassSurface(radius)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
