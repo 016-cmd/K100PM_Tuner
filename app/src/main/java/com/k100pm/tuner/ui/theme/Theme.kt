@@ -129,7 +129,7 @@ object ThemePrefs {
 
 // ── K90TunerTheme ──
 @Composable
-fun K90TunerTheme(content: @Composable () -> Unit) {
+fun K100TunerTheme(content: @Composable () -> Unit) {
     val ctx = LocalContext.current
 
     // recreate() 后整个 Composable 树重建，直接从 SharedPreferences 读
