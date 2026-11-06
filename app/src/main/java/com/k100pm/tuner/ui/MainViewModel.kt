@@ -132,5 +132,6 @@ class MainViewModel : ViewModel() {
         _controlValues.value[id] ?: "—"
 
     val canEdit: Boolean
-        get() = _moduleStatus.value.isInstalled && _hasRoot.value == true
+        get() = DebugMode.on(AppContextHolder.ctx) ||
+                (_moduleStatus.value.isInstalled && _hasRoot.value == true)
 }

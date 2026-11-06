@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.k100pm.tuner.ui.components.GlassSettingsCard
 import com.k100pm.tuner.ui.components.AppearanceSection
+import com.k100pm.tuner.ui.theme.DebugMode
 import com.k100pm.tuner.ui.theme.ThemeMode
 import com.k100pm.tuner.ui.theme.ThemePrefs
 import com.k100pm.tuner.ui.theme.Appearance
@@ -42,6 +43,15 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val ctx = LocalContext.current
+    var debugTaps by remember { mutableStateOf(0) }
+    var showDebug by remember { mutableStateOf(false) }
+    val bump: () -> Unit = {
+        debugTaps += 1
+        if (debugTaps >= DebugMode.TAPS) {
+            debugTaps = 0
+            showDebug = true
+        }
+    }
     var themeMode by remember { mutableStateOf(ThemePrefs.getMode(ctx)) }
     var wallpaperUri by remember { mutableStateOf(ThemePrefs.getWallpaperUri(ctx)) }
     var wallpaperKind by remember { mutableIntStateOf(ThemePrefs.getWallpaperKind(ctx)) }
@@ -80,6 +90,10 @@ fun SettingsScreen(
             }
             activity.recreate()
         }
+    }
+
+    if (showDebug) {
+        DebugUnlockDialog(ctx = ctx, onDismiss = { showDebug = false })
     }
 
     Scaffold(
@@ -176,7 +190,7 @@ fun SettingsScreen(
             SectionHeader("关于")
             Spacer(Modifier.height(6.dp))
             GlassSettingsCard {
-                InfoRow("版本", "v$appVersion")
+                InfoRow("版本", "v$appVersion") { bump() }
                 InfoRow("开发者", "016-cmd")
                 InfoRow("设备", "REDMI K100 Pro Max")
                 HorizontalDivider(
@@ -369,10 +383,15 @@ private fun SettingsRow(
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(label: String, value: String, onClick: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(
+                if (onClick != null)
+                    Modifier.jellyPress(Appearance.jelly > 0).clickable(onClick = onClick)
+                else Modifier
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -380,4 +399,48 @@ private fun InfoRow(label: String, value: String) {
         Spacer(Modifier.weight(1f))
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
     }
+}
+
+@Composable
+private fun DebugUnlockDialog(ctx: android.content.Context, onDismiss: () -> Unit) {
+    val on = DebugMode.on(ctx)
+    var text by remember { mutableStateOf("") }
+    var err by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (on) "调试模式（已开启）" else "调试模式") },
+        text = {
+            Column {
+                Text(
+                    if (on) "输入口令可关闭：关闭后恢复按模块状态隐藏页面。"
+                    else "输入口令后，即使未安装模块也会显示全部界面（仅预览，不会真的调音）。",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it; err = false },
+                    singleLine = true,
+                    isError = err,
+                    label = { Text("口令") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
+                )
+                if (err) Text("口令不对", fontSize = 11.sp, color = Color(0xFFEF4444))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (on) {
+                    DebugMode.set(ctx, false)
+                    onDismiss()
+                } else if (text.trim() == DebugMode.PASS) {
+                    DebugMode.set(ctx, true)
+                    onDismiss()
+                } else {
+                    err = true
+                }
+            }) { Text("确定") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
 }

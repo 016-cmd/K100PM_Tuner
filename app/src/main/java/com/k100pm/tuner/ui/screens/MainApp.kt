@@ -84,6 +84,9 @@ fun MainApp(activity: Activity) {
         DockTab("音效", Icons.Default.Equalizer)
     )
 
+    // 订阅调试开关：切换后强制整棵树重组，让 canEdit 立刻生效
+    val debugUi by com.k100pm.tuner.ui.theme.DebugMode.state.collectAsState()
+    if (debugUi) Unit
     val pager = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     val screenW = LocalConfiguration.current.screenWidthDp.dp
