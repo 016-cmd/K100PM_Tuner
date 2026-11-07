@@ -428,18 +428,104 @@ object DolbyTunerManager {
     private fun applyDax3ToSystem() {
         try {
             if (_dax3Dirty.isEmpty()) return  // 没改过任何 DAX3 参数,跳过
+            val cmds = StringBuilder("set +e;")
             val sb = StringBuilder("{\n")
             for (key in _dax3Dirty) {
                 val value = _dax3.value[key] ?: continue
-                WsaShell.execSyncCmd("setprop $key '$value' 2>/dev/null")
-                WsaShell.execSyncCmd("resetprop $key '$value' 2>/dev/null")
+                cmds.append(" setprop $key '$value' 2>/dev/null; resetprop $key '$value' 2>/dev/null;")
                 sb.append("  \"$key\": \"$value\",\n")
             }
             val json = sb.toString().trimEnd('\n').trimEnd(',') + "\n}\n"
-            WsaShell.execSyncCmd("cat > $DAX3_SNAPSHOT << 'DAX3EOF'\n$json\nDAX3EOF")
+            cmds.append(" cat > $DAX3_SNAPSHOT << 'DAX3EOF'\n$json\nDAX3EOF")
+            WsaShell.execSyncCmd(cmds.toString())
         } catch (_: Exception) {
             // 静默
         }
+    }
+
+    // ═══════════════════════════════════════════
+    //  模块文件写入 / 挂载校验 / 链路重载
+    //  （全部合并成单次 su，避免几十次权限握手）
+    // ═══════════════════════════════════════════
+
+    /** 模块里所有需要同步写回的 dax 源文件：Aoi / Link / 模块 odm / vendor */
+    private fun moduleDaxTargets(): List<String> {
+        val b = moduleBase()
+        return listOf(
+            "$b/Aoi/odm/etc/dolby/dax-default.xml",
+            "$b/Link/odm/etc/dolby/dax-default.xml",
+            "$b/odm/etc/dolby/dax-default.xml",
+            "$b/vendor/etc/dolby/dax-default.xml"
+        )
+    }
+
+    /** 写回所有存在的模块 dax 文件；返回错误文案，成功返回 null */
+    private fun writeToModuleTargets(internalPath: String): String? {
+        val targets = moduleDaxTargets()
+        val sb = StringBuilder("set +e; ok=0;")
+        for (t in targets) {
+            sb.append(" if [ -f '$t' ]; then cp -f '$internalPath' '$t' && chmod 644 '$t' && ok=\$((ok+1)); fi;")
+        }
+        sb.append(" echo WROTE=\$ok")
+        val r = WsaShell.execSyncCmd(sb.toString())
+        val wrote = r.substringAfter("WROTE=", "").trim().substringBefore(" ").toIntOrNull() ?: 0
+        if (wrote <= 0) return "❌ 模块里没有可写的 dax 文件（Aoi/Link/odm/vendor 都不存在）"
+        return null
+    }
+
+    /** 校验系统路径上的 dax 是否就是模块里那份；不一致就补挂一次 */
+    private fun ensureSystemSync(): String? {
+        val srcs = moduleDaxTargets().filter { it.contains("/Aoi/") || it.contains("/Link/") }
+        if (srcs.isEmpty()) return "❌ 找不到模块目录，请确认模块已安装"
+        val args = (srcs + DAX_SYS).joinToString(" ") { "'$it'" }
+        val out = WsaShell.execSyncCmd("md5sum $args 2>/dev/null").trim()
+        val map = out.lines().mapNotNull { line ->
+            val p = line.trim().split(Regex("\\s+"), 2)
+            if (p.size == 2) p[1].trim().removePrefix("*") to p[0].trim() else null
+        }.toMap()
+        val src = srcs.firstOrNull { !map[it].isNullOrEmpty() }
+            ?: return "❌ 读不到模块里的 dax 文件，请确认模块已安装"
+        val want = map[src]
+        if (map[DAX_SYS] == want) return null
+        WsaShell.execSyncCmd("mount --bind '$src' '$DAX_SYS' 2>/dev/null")
+        val now = WsaShell.execSyncCmd("md5sum '$DAX_SYS' 2>/dev/null | cut -d' ' -f1").trim().removePrefix("*")
+        return if (now == want) null else "❌ 模块文件与系统路径不同步（热挂载失败），请重启手机后再点应用"
+    }
+
+    /** 杀 DMS + audioserver，并在同一条脚本里等参数库重建；返回 (服务OK, 库OK) */
+    private fun restartDolbyStack(): Pair<Boolean, Boolean> {
+        val script = """
+            set +e
+            db=/data/vendor/dolby/dax_sqlite3.db
+            before=${'$'}(stat -c %Y ${'$'}db 2>/dev/null)
+            for n in vendor.dolby.dms.service audioserver; do
+              P=${'$'}(pidof ${'$'}n); [ -n "${'$'}P" ] && kill ${'$'}P 2>/dev/null
+            done
+            sleep 0.3
+            for n in vendor.dolby.dms.service audioserver; do
+              P=${'$'}(pidof ${'$'}n); [ -n "${'$'}P" ] && kill -9 ${'$'}P 2>/dev/null
+            done
+            i=0
+            while [ ${'$'}i -lt 60 ]; do
+              a=${'$'}(pidof audioserver); d=${'$'}(pidof vendor.dolby.dms.service)
+              [ -n "${'$'}a" ] && [ -n "${'$'}d" ] && break
+              i=${'$'}((i+1)); sleep 0.2
+            done
+            pidof vendor.dolby.dms.service >/dev/null 2>&1 || start vendor.dolby.dms.service 2>/dev/null
+            pidof audioserver >/dev/null 2>&1 || start audioserver 2>/dev/null
+            ok=0
+            pidof audioserver >/dev/null 2>&1 && pidof vendor.dolby.dms.service >/dev/null 2>&1 && ok=1
+            dbok=0
+            i=0
+            while [ ${'$'}i -lt 48 ]; do
+              now=${'$'}(stat -c %Y ${'$'}db 2>/dev/null)
+              if [ -n "${'$'}now" ] && [ "${'$'}now" != "${'$'}before" ]; then dbok=1; break; fi
+              i=${'$'}((i+1)); sleep 0.25
+            done
+            echo "STACK=${'$'}ok DB=${'$'}dbok"
+        """.trimIndent()
+        val r = WsaShell.execSyncCmd(script)
+        return r.contains("STACK=1") to r.contains("DB=1")
     }
 
     // ═══════════════════════════════════════════
@@ -495,24 +581,24 @@ object DolbyTunerManager {
             var modified = original
 
             // ── speaker 层参数 ──
-            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-enable", boolToXml(p.dialogEnhancerEnable))
-            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-amount", p.dialogEnhancerAmount.toString())
-            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-ducking", p.dialogEnhancerDucking.toString())
-            modified = replaceInSpeakerEndpoints(modified, "bass-enhancer-enable", boolToXml(p.bassEnhancerEnable))
-            modified = replaceInSpeakerEndpoints(modified, "virtual-bass-process-enable", boolToXml(p.virtualBassProcessEnable))
-            modified = replaceInSpeakerEndpoints(modified, "surround-decoder-enable", boolToXml(p.surroundDecoderEnable))
-            modified = replaceInSpeakerEndpoints(modified, "surround-boost", p.surroundBoost.toString())
-            modified = replaceInSpeakerEndpoints(modified, "volume-leveler-amount", if (p.volumeLevelerEnable) "1" else "0")
-            modified = replaceInSpeakerEndpoints(modified, "virtualizer-enable", boolToXml(p.virtualizerEnable))
-            modified = replaceInSpeakerEndpoints(modified, "virtualizer-start-band", p.virtualizerStartBand.toString())
-            modified = replaceInSpeakerEndpoints(modified, "mi-surround-compressor-steering-enable", boolToXml(p.miSurroundCompressorSteeringEnable))
+            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-enable", boolToXml(p.dialogEnhancerEnable), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-amount", p.dialogEnhancerAmount.toString(), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "dialog-enhancer-ducking", p.dialogEnhancerDucking.toString(), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "bass-enhancer-enable", boolToXml(p.bassEnhancerEnable), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "virtual-bass-process-enable", boolToXml(p.virtualBassProcessEnable), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "surround-decoder-enable", boolToXml(p.surroundDecoderEnable), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "surround-boost", p.surroundBoost.toString(), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "volume-leveler-amount", if (p.volumeLevelerEnable) "1" else "0", emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "virtualizer-enable", boolToXml(p.virtualizerEnable), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "virtualizer-start-band", p.virtualizerStartBand.toString(), emptySet())
+            modified = replaceInSpeakerEndpoints(modified, "mi-surround-compressor-steering-enable", boolToXml(p.miSurroundCompressorSteeringEnable), emptySet())
             modified = replaceInSpeakerEndpoints(modified, "calibration-boost", p.calibrationBoost.toString(), emptySet())
             // ── IEQ 增强（APP 只切换外放 speaker 的开关,不碰耳机 headphone 端点）──
-            modified = replaceInSpeakerEndpoints(modified, "ieq-enable", boolToXml(p.ieqEnhanceEnable))
+            modified = replaceInSpeakerEndpoints(modified, "ieq-enable", boolToXml(p.ieqEnhanceEnable), emptySet())
             // volmax-boost 每个 profile 各一份：必须改所有 speaker 端点，否则只改到 Default
             modified = replaceInSpeakerEndpoints(modified, "volmax-boost", p.volmaxBoost.toString(), emptySet())
-            modified = replaceInSpeakerEndpoints(modified, "peak-value", p.peakValue.toString())
-            modified = replaceInSpeakerEndpoints(modified, "hearing-protection-enable", boolToXml(p.hearingProtectionEnable))
+            modified = replaceInAllProfiles(modified, "peak-value", p.peakValue.toString())
+            modified = replaceInSpeakerEndpoints(modified, "hearing-protection-enable", boolToXml(p.hearingProtectionEnable), emptySet())
 
             // ── Tuning 层三场景同步 ──
             modified = replaceInAllTunings(modified, "bass-enhancer-boost", p.bassEnhancerBoost.toString())
@@ -537,36 +623,35 @@ object DolbyTunerManager {
             internalFile.writeText(modified, Charsets.UTF_8)
             val internalPath = internalFile.absolutePath
 
-            // 4. su -c cp 覆盖到模块 Aoi 目录（Magisk 开机 bind mount 的源文件）
-            val linkOk = WsaShell.execSyncCmd(
-                "cp -f '$internalPath' '$MODULE_DAX' && chmod 644 '$MODULE_DAX' && echo OK || echo FAIL"
-            )
-            if (!linkOk.contains("OK")) {
-                _resultMsg.value = "❌ 模块目录写入失败（Aoi/Link 均不可写）,模块可能不存在或只读"
+            // 4. 写回模块所有 dax 源文件（Aoi / Link / 模块 odm / vendor，存在才写）
+            val writeErr = writeToModuleTargets(internalPath)
+            if (writeErr != null) {
+                _resultMsg.value = writeErr
                 _isApplying.value = false
                 return@withContext false
             }
 
-            // K100PM 已统一 vendor 与 Aoi/odm 目录,APP 同步写 vendor（学 K90PM: 两目录保持一致 MD5）
-            val vendorExists = WsaShell.execSyncCmd("[ -f $MODULE_VENDOR_DAX ] && echo yes || echo no")
-            if (vendorExists.contains("yes")) {
-                WsaShell.execSyncCmd("cp -f '$internalPath' '$MODULE_VENDOR_DAX' && chmod 644 '$MODULE_VENDOR_DAX'")
+            // 5. 系统路径同步校验（挂载丢了就补挂，仍不同步就报错）
+            val syncErr = ensureSystemSync()
+            if (syncErr != null) {
+                _resultMsg.value = syncErr
+                _isApplying.value = false
+                return@withContext false
             }
 
             // 5.5. DAX3 系统属性写入 + 快照持久化
             applyDax3ToSystem()
 
-            // 6. 重启 audioserver 使杜比引擎重新加载
-            val restartResult = WsaShell.execSyncCmd("setprop ctl.restart audioserver && echo OK || echo FAIL")
-            val restartOk = restartResult.contains("OK")
+            // 6. 杀 DMS + audioserver，让参数库与 DSP 都按新文件重来（等库在同一条脚本里）
+            val (restartOk, dbOk) = restartDolbyStack()
             // 6.5 音频服务重启会清空 DSP 内存里的参数 → 把实时层保存过的 GEQ 写回去
             val rtOk = if (restartOk) reapplyRealtimeAfterRestart(context) else false
             if (restartOk) {
-                _resultMsg.value = "✅ 参数已保存并生效!音频服务已重启,效果即时生效." +
-                    (if (rtOk) "实时层 GEQ 已自动写回." else "实时层 GEQ 暂未写回（音频服务可能仍在启动），到实时层拖一下即可恢复.") +
-                    "请不要频繁应用参数,每次应用都需要重启音频服务,频繁重启可能导致音频服务出现问题."
+                _resultMsg.value = "✅ 参数已保存并生效!杜比服务与音频服务都已重载" +
+                    (if (dbOk) "，参数库已重建." else "，参数库重建较慢，听感可能延迟几秒.") +
+                    (if (rtOk) "实时层 GEQ 已自动写回." else "实时层 GEQ 暂未写回（音频服务可能仍在启动），到实时层拖一下即可恢复.")
             } else {
-                _resultMsg.value = "✅ 参数已保存!但音频服务重启失败,请重启手机后生效."
+                _resultMsg.value = "✅ 参数已保存!但服务重载失败,请重启手机后生效."
             }
             _isApplying.value = false
             true
@@ -617,44 +702,42 @@ object DolbyTunerManager {
             internalFile.writeText(factoryXml, Charsets.UTF_8)
             val internalPath = internalFile.absolutePath
 
-            // 3. su -c cp 覆盖回模块 Aoi 目录
-            val linkOk = WsaShell.execSyncCmd(
-                "cp -f '$internalPath' '$MODULE_DAX' && chmod 644 '$MODULE_DAX' && echo OK || echo FAIL"
-            )
-            if (!linkOk.contains("OK")) {
-                _resultMsg.value = "❌ 模块目录写入失败（Aoi/Link 均不可写）"
+            // 3. 写回模块所有 dax 源文件（Aoi / Link / 模块 odm / vendor，存在才写）
+            val writeErr = writeToModuleTargets(internalPath)
+            if (writeErr != null) {
+                _resultMsg.value = writeErr
                 _isApplying.value = false
                 return@withContext false
             }
 
-            // K100PM 已统一 vendor 与 Aoi/odm 目录,重置时同步写 vendor（学 K90PM）
-            val vendorExists = WsaShell.execSyncCmd("[ -f $MODULE_VENDOR_DAX ] && echo yes || echo no")
-            if (vendorExists.contains("yes")) {
-                WsaShell.execSyncCmd("cp -f '$internalPath' '$MODULE_VENDOR_DAX' && chmod 644 '$MODULE_VENDOR_DAX'")
+            // 3.5 系统路径同步校验
+            val syncErr = ensureSystemSync()
+            if (syncErr != null) {
+                _resultMsg.value = syncErr
+                _isApplying.value = false
+                return@withContext false
             }
 
-            // 4.5. DAX3 重置为模块默认值 + 删除快照（让 service.sh 走 else 分支写死默认）
-            _dax3.value = DAX3_DEFAULTS.toMap()
-            // 重置时必须将 dirty 的 key（用户改过的）setprop 回默认值
+            // 4.5. DAX3 重置为模块默认值 + 删除快照（合成一次 su）
+            val dax3Reset = StringBuilder("set +e;")
             for (key in _dax3Dirty) {
                 val defVal = DAX3_DEFAULTS[key] ?: continue
-                WsaShell.execSyncCmd("setprop $key '$defVal' 2>/dev/null")
-                WsaShell.execSyncCmd("resetprop $key '$defVal' 2>/dev/null")
+                dax3Reset.append(" setprop $key '$defVal' 2>/dev/null; resetprop $key '$defVal' 2>/dev/null;")
             }
             _dax3Dirty.clear()
-            WsaShell.execSyncCmd("rm -f $DAX3_SNAPSHOT 2>/dev/null")  // 删快照,重启后 service.sh 用默认
+            dax3Reset.append(" rm -f $DAX3_SNAPSHOT 2>/dev/null")
+            WsaShell.execSyncCmd(dax3Reset.toString())
+            _dax3.value = DAX3_DEFAULTS.toMap()
 
-            // 5. 重启 audioserver 使杜比引擎重新加载
-            val restartResult = WsaShell.execSyncCmd("setprop ctl.restart audioserver && echo OK || echo FAIL")
-            val restartOk = restartResult.contains("OK")
+            // 5. 杀 DMS + audioserver，让参数库与 DSP 都按出厂文件重来（等库也在同一条脚本里）
+            val (restartOk, _) = restartDolbyStack()
 
-            // 6. 重启后 Dolby HAL 初始化可能从内部状态恢复旧 persist 值,
-            //    因此需要再次 setprop 覆盖,确保 DAX3 属性回到默认值
-            for (key in DAX3_DEFAULTS.keys) {
-                val defVal = DAX3_DEFAULTS[key]!!
-                WsaShell.execSyncCmd("setprop $key '$defVal' 2>/dev/null")
-                WsaShell.execSyncCmd("resetprop $key '$defVal' 2>/dev/null")
+            // 6. 重启后 Dolby HAL 初始化可能从内部状态恢复旧 persist 值，一次 su 覆盖回默认值
+            val dax3Restore = StringBuilder("set +e;")
+            for ((key, defVal) in DAX3_DEFAULTS) {
+                dax3Restore.append(" setprop $key '$defVal' 2>/dev/null; resetprop $key '$defVal' 2>/dev/null;")
             }
+            WsaShell.execSyncCmd(dax3Restore.toString())
 
             // 7. 重新读取参数刷新UI
             loadParams(context)
@@ -689,7 +772,7 @@ object DolbyTunerManager {
             ?: runCatching { DapCurveStore.load(context) }.getOrNull()
             ?: return false
         repeat(8) { attempt ->
-            if (attempt > 0) kotlinx.coroutines.delay(700)
+            if (attempt > 0) kotlinx.coroutines.delay(260)
             val e1 = runCatching { DapRealtime.writeLive(curve) }
                 .getOrElse { it.message ?: "写入异常" }
             if (e1 == null) {
